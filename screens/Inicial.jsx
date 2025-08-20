@@ -21,6 +21,7 @@ export default function Inicial({ navigation }) {
     const mesesAteAposentadoria = (idadeAposNum - idadeAtualNum) * 12;
 
     const valorMensal = (valorFinal * taxaMensal) / (Math.pow(1 + taxaMensal, mesesAteAposentadoria) - 1);
+
     const acumuladoCom300 = 300 * (Math.pow(1 + taxaMensal, mesesAteAposentadoria) - 1) / taxaMensal;
 
     const dados = { mesesAteAposentadoria, valorMensal, acumuladoCom300 };
@@ -59,7 +60,7 @@ export default function Inicial({ navigation }) {
 
       <Text style={styles.label}>Rentabilidade mensal (%)</Text>
       <TextInput
-        placeholder="Ex: 0,5"
+        placeholder="Ex: 0,7"
         keyboardType="numeric"
         style={styles.input}
         value={rentabilidadeMensal}
