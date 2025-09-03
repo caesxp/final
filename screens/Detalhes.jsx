@@ -4,24 +4,40 @@ import { LineChart } from 'react-native-chart-kit';
 
 export default function Detalhes({ route }) {
   const { dados } = route.params;
-  const taxaMensal = dados.taxaMensal;
+
+  // puxa os dados da tela inicial
+  const taxaMensal = dados.taxaMensal;  // taxa de rentabilidade mensal
+  const valorMensal = dados.valorMensal; // valor mensal calculado
+  const mesesAteAposentadoria = dados.mesesAteAposentadoria;
+
+  // olha se a taxaMensal está definida certa
+  if (taxaMensal === undefined || isNaN(taxaMensal)) {
+    console.error("Valor inválido de taxaMensal:", taxaMensal);
+    return <Text>Erro: Taxa de rentabilidade inválida.</Text>;
+  }
+
+  // inicializa os arrays para saldo
   const saldo = [];
   const saldo300 = [];
-  let acumulado = 0;
-  let acumulado300 = 0;
 
-  // Calcula mês a mês o saldo acumulado
-  for (let i = 1; i <= dados.mesesAteAposentadoria; i++) {
-    acumulado = acumulado * (1 + taxaMensal) + parseFloat(dados.valorMensal);
+  let acumulado = 0;  // saldo inicial é 0
+  let acumulado300 = 0;  // saldo inicial para 300R$/mês é 0
+
+  // calcula mês a mês o saldo acumulado
+  for (let i = 1; i <= mesesAteAposentadoria; i++) {
+    // formula de juros compostos: saldo anterior * (1 + taxa de rentabilidade) + contribuição mensal
+    acumulado = acumulado * (1 + taxaMensal) + valorMensal;
     acumulado300 = acumulado300 * (1 + taxaMensal) + 300;
+
+    // adiciona os valores ao gráfico, com arredondamento para 2 casas decimais
     saldo.push(parseFloat(acumulado.toFixed(2)));
     saldo300.push(parseFloat(acumulado300.toFixed(2)));
   }
 
-  // Labels a cada 12 meses (1 ano) para não poluir o gráfico
+  // labels a cada 24 meses (2 anos)
   const labels = [];
-  for (let i = 1; i <= dados.mesesAteAposentadoria; i++) {
-    if (i % 12 === 0) labels.push((i / 12).toString());
+  for (let i = 1; i <= mesesAteAposentadoria; i++) {
+    if (i % 24 === 0) labels.push((i / 12).toString());
     else labels.push('');
   }
 
@@ -32,10 +48,10 @@ export default function Detalhes({ route }) {
 
         <View style={styles.resultBlock}>
           <Text style={styles.resultText}>
-            Prazo total até a aposentadoria: <Text style={styles.highlight}>{dados.mesesAteAposentadoria} meses</Text>
+            Prazo total até a aposentadoria: <Text style={styles.highlight}>{mesesAteAposentadoria} meses</Text>
           </Text>
           <Text style={styles.resultText}>
-            Valor mensal necessário: <Text style={styles.highlight}>R$ {parseFloat(dados.valorMensal).toFixed(2)}</Text>
+            Valor mensal necessário: <Text style={styles.highlight}>R$ {parseFloat(valorMensal).toFixed(2)}</Text>
           </Text>
           <Text style={styles.resultText}>
             Valor acumulado com 300R$/mês: <Text style={styles.highlight}>R$ {parseFloat(dados.acumuladoCom300).toFixed(2)}</Text>
@@ -48,27 +64,34 @@ export default function Detalhes({ route }) {
             data={{
               labels: labels,
               datasets: [
-                { data: saldo, color: (opacity = 1) => `rgba(0, 102, 204, ${opacity})`, strokeWidth: 2 },
-                { data: saldo300, color: (opacity = 1) => `rgba(204, 0, 0, ${opacity})`, strokeWidth: 2 }
+                {
+                  data: saldo,
+                  color: (opacity = 1) => `rgba(0, 102, 204, ${opacity})`, // linha azul (saldo necessário)
+                  strokeWidth: 2,
+                },
+                {
+                  data: saldo300,
+                  color: (opacity = 1) => `rgba(204, 0, 0, ${opacity})`, // linha vermelha (saldo com 300R$/mês)
+                  strokeWidth: 2,
+                },
               ],
-              legend: ["Saldo necessário", "Saldo com 300R$/mês"]
+              legend: ["Saldo necessário", "Saldo com 300R$/mês"], // legenda
             }}
-            width={Math.max(Dimensions.get("window").width - 40, dados.mesesAteAposentadoria * 5)}
-            height={300}
-            yAxisSuffix="R$"
-            fromZero={true}
+            width={Math.max(Dimensions.get("window").width - 40, mesesAteAposentadoria * 5)} // ajusta a largura do gráfico
+            height={300} // altura do gráfico
+            fromZero={true} // garante que o gráfico começa do zero
             chartConfig={{
               backgroundColor: "#e0f0ff",
               backgroundGradientFrom: "#e0f0ff",
               backgroundGradientTo: "#ffffff",
-              decimalPlaces: 2,
-              color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-              labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-              style: { borderRadius: 16 },
-              propsForDots: { r: "3", strokeWidth: "1", stroke: "#0066cc" }
+              decimalPlaces: 0, // limita a 0 casas decimais (remove o .00)
+              color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`, // cor dos rótulos e texto
+              labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`, // cor das labels no gráfico
+              style: { borderRadius: 16 }, // borda arredondada
+              propsForDots: { r: "3", strokeWidth: "1", stroke: "#0066cc" }, // estilo dos ponto
             }}
-            bezier
-            style={{ marginVertical: 12, borderRadius: 16 }}
+            bezier // suaviza as linhas
+            style={{ marginVertical: 12, borderRadius: 16 }} // estilo do gráfico
           />
         </ScrollView>
       </View>
@@ -97,7 +120,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 12,
     textAlign: 'center',
-    color: '#0066cc'
+    color: '#0066cc',
   },
   resultBlock: {
     marginBottom: 20,
@@ -114,6 +137,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 8,
-    color: '#0066cc'
+    color: '#0066cc',
   },
 });

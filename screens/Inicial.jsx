@@ -13,15 +13,35 @@ export default function Inicial({ navigation }) {
       return;
     }
 
+    // Garantindo que todos os campos sejam convertidos corretamente para números
     const idadeAtualNum = parseInt(idadeAtual);
     const idadeAposNum = parseInt(idadeAposentadoria);
     const valorFinal = parseFloat(valorAposentadoria);
     const taxaMensal = parseFloat(rentabilidadeMensal) / 100;
+
+    // Verificando se algum valor não é válido
+    if (isNaN(idadeAtualNum) || isNaN(idadeAposNum) || isNaN(valorFinal) || isNaN(taxaMensal)) {
+      Alert.alert('Erro', 'Certifique-se de que todos os valores são válidos.');
+      return;
+    }
+
     const mesesAteAposentadoria = (idadeAposNum - idadeAtualNum) * 12;
+
+    if (mesesAteAposentadoria <= 0) {
+      Alert.alert('Erro', 'A idade para aposentadoria deve ser maior que a idade atual.');
+      return;
+    }
+
+    // Fórmula de cálculo do valor mensal necessário:
     const valorMensal = (valorFinal * taxaMensal) / (Math.pow(1 + taxaMensal, mesesAteAposentadoria) - 1);
     const acumuladoCom300 = 300 * (Math.pow(1 + taxaMensal, mesesAteAposentadoria) - 1) / taxaMensal;
 
-    const dados = { mesesAteAposentadoria, valorMensal, acumuladoCom300 };
+    // Exibir no console para verificação do valor mensal
+    console.log("valorMensal:", valorMensal);
+    console.log("valorMensal calculado:", valorMensal.toFixed(2));
+
+    // Passando os dados para a próxima tela (Detalhes)
+    const dados = { mesesAteAposentadoria, valorMensal, acumuladoCom300, taxaMensal };
     navigation.navigate('Detalhes', { dados });
   };
 
@@ -120,3 +140,4 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
+
